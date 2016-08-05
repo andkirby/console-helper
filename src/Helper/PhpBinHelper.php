@@ -24,6 +24,11 @@ class PhpBinHelper extends Helper
     const NAME = 'php_bin_get';
 
     /**
+     * Default option name
+     */
+    const OPTION_NAME = 'php-binary';
+
+    /**
      * Get name
      *
      * @return string
@@ -48,7 +53,7 @@ class PhpBinHelper extends Helper
         SymfonyStyle $style,
         InputInterface $input,
         OutputInterface $output,
-        $optionName = 'php-binary',
+        $optionName = self::OPTION_NAME,
         \Closure $validator = null
     ) {
         $validator = $validator ?: $this->getPhpValidator();
