@@ -23,7 +23,7 @@ class ShellHelper extends Helper
      *
      * @var int|null
      */
-    protected $lastStatus = null;
+    protected $lastStatus;
 
     /**
      * {@inheritdoc}
@@ -55,7 +55,7 @@ class ShellHelper extends Helper
 
         exec(trim(`$command`), $output, $this->lastStatus);
 
-        $output = implode(PHP_EOL, $output);
+        $output = trim(implode(PHP_EOL, $output));
 
         if ($exceptionOnError && $this->hadError()) {
             $exception = $exception ?: ShellException::class;
@@ -82,6 +82,6 @@ class ShellHelper extends Helper
      */
     public function hadError()
     {
-        return null !== $this->lastStatus && $this->lastStatus !== 0;
+        return null !== $this->getLastStatus() && 0 !== $this->getLastStatus();
     }
 }
