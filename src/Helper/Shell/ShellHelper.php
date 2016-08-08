@@ -38,23 +38,28 @@ class ShellHelper extends Helper
      *
      * @param string $command
      * @param bool   $exceptionOnError
-     * @param bool   $catchOutput
+     * @param string $exception
      * @return string
      * @throws ShellException
+     * @internal param bool $catchOutput
      */
-    public function shellExec($command, $exceptionOnError = true, $catchOutput = true)
+    public function shellExec($command, $exceptionOnError = true, $exception = ShellException::class)
     {
-        if ($catchOutput) {
+        if (!$command) {
+            throw new ShellException('Command cannot be empty.');
+        }
+
+        if (!strpos($command, '2>&1')) {
             $command .= ' 2>&1';
         }
 
-        exec(trim(`$command`), $output, $return);
-        $this->lastStatus = $return;
+        exec(trim(`$command`), $output, $this->lastStatus);
 
         $output = implode(PHP_EOL, $output);
 
-        if ($exceptionOnError && 0 !== $return) {
-            throw new ShellException($output);
+        if ($exceptionOnError && $this->hadError()) {
+            $exception = $exception ?: ShellException::class;
+            throw new $exception($output);
         }
 
         return $output;
@@ -68,5 +73,15 @@ class ShellHelper extends Helper
     public function getLastStatus()
     {
         return $this->lastStatus;
+    }
+
+    /**
+     * Check a last executed command had an error
+     *
+     * @return int|null
+     */
+    public function hadError()
+    {
+        return null !== $this->lastStatus && $this->lastStatus !== 0;
     }
 }
