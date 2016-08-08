@@ -11,7 +11,7 @@ use Symfony\Component\Console\Question\Question;
 /**
  * Simple version of question helper
  *
- * @package Rikby\Console\Helper\PhpBin
+ * @package Rikby\Console\Helper
  */
 class SimpleQuestionHelper extends Helper
 {
