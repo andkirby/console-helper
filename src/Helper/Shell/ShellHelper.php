@@ -5,6 +5,7 @@
 namespace Rikby\Console\Helper\Shell;
 
 use Symfony\Component\Console\Helper\Helper;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Wrap helper for running shell commands
@@ -26,6 +27,13 @@ class ShellHelper extends Helper
     protected $lastStatus;
 
     /**
+     * Input model
+     *
+     * @var OutputInterface
+     */
+    protected $output;
+
+    /**
      * {@inheritdoc}
      */
     public function getName()
@@ -38,31 +46,33 @@ class ShellHelper extends Helper
      *
      * @param string $command
      * @param bool   $exceptionOnError
+     * @param string $tail
      * @param string $exception
      * @return string
      * @throws ShellException
-     * @internal param bool $catchOutput
+     * @internal param array $output
      */
-    public function shellExec($command, $exceptionOnError = true, $exception = ShellException::class)
+    public function shellExec($command, $exceptionOnError = true, $tail = ' 2>&1', $exception = ShellException::class)
     {
-        if (!$command) {
-            throw new ShellException('Command cannot be empty.');
-        }
+        $command = $this->filterCommand($command, $tail);
+        $this->showCommand($command);
 
-        if (!strpos($command, '2>&1')) {
-            $command .= ' 2>&1';
-        }
+        exec($command, $output, $this->lastStatus);
 
-        exec(trim(`$command`), $output, $this->lastStatus);
-
-        $output = trim(implode(PHP_EOL, $output));
-
-        if ($exceptionOnError && $this->hadError()) {
-            $exception = $exception ?: ShellException::class;
-            throw new $exception($output);
-        }
+        $output = $this->filterOutput($output);
+        $this->processError($output, $exceptionOnError, $exception);
 
         return $output;
+    }
+
+    /**
+     * Check a last executed command had an error
+     *
+     * @return int|null
+     */
+    public function hadError()
+    {
+        return null !== $this->getLastStatus() && 0 !== $this->getLastStatus();
     }
 
     /**
@@ -76,12 +86,106 @@ class ShellHelper extends Helper
     }
 
     /**
-     * Check a last executed command had an error
+     * Set output
      *
-     * @return int|null
+     * @param OutputInterface $output
+     * @return $this
      */
-    public function hadError()
+    public function setOutput($output)
     {
-        return null !== $this->getLastStatus() && 0 !== $this->getLastStatus();
+        $this->output = $output;
+
+        return $this;
+    }
+
+    /**
+     * Filter command string
+     *
+     * @param string $command
+     * @param string $tail
+     * @return string
+     * @throws ShellException
+     */
+    protected function filterCommand($command, $tail)
+    {
+        $command = trim($command);
+        if (!$command) {
+            throw new ShellException('Command cannot be empty.');
+        }
+
+        if ($tail && !strpos($command, $tail)) {
+            $command .= $tail;
+        }
+
+        return $command;
+    }
+
+    /**
+     * Show command
+     *
+     * @param string $command
+     * @return $this
+     */
+    protected function showCommand($command)
+    {
+        if ($this->output && $this->output->getVerbosity()) {
+            $this->output->writeln("command: $command");
+        }
+
+        return $this;
+    }
+
+    /**
+     * Filter output
+     *
+     * @param array|null $output
+     * @return string
+     */
+    protected function filterOutput($output)
+    {
+        if ($output) {
+            $output = trim(implode(PHP_EOL, $output));
+        }
+
+        return $output;
+    }
+
+    /**
+     * Process error in output
+     *
+     * @param string $output
+     * @param bool   $exceptionOnError
+     * @param string $exceptionClass
+     * @return $this
+     */
+    protected function processError($output, $exceptionOnError = true, $exceptionClass = ShellException::class)
+    {
+        if ($exceptionOnError && $this->hadError()) {
+            $message        = $output && $this->isVerbose() ? $output : 'Cannot run command.';
+            $exceptionClass = $exceptionClass ?: ShellException::class;
+            throw new $exceptionClass($message);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Is output verbose
+     *
+     * @return bool
+     */
+    protected function isVerbose()
+    {
+        return $this->output && $this->output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE;
+    }
+
+    /**
+     * Is output very verbose
+     *
+     * @return bool
+     */
+    protected function isVeryVerbose()
+    {
+        return $this->output && $this->output->getVerbosity() >= OutputInterface::VERBOSITY_VERY_VERBOSE;
     }
 }
