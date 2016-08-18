@@ -128,7 +128,7 @@ class ShellHelper extends Helper
      */
     protected function showCommand($command)
     {
-        if ($this->isVerbose()) {
+        if ($this->isVeryVerbose()) {
             $this->output->writeln("command: $command");
         }
 
@@ -161,9 +161,10 @@ class ShellHelper extends Helper
     protected function processError($output, $exceptionOnError = true, $exceptionClass = ShellException::class)
     {
         if ($exceptionOnError && $this->hadError()) {
-            $message        = $output && $this->isVerbose() ? $output : 'Cannot run command.';
             $exceptionClass = $exceptionClass ?: ShellException::class;
-            throw new $exceptionClass($message);
+            throw new $exceptionClass(
+                $output && $this->isVeryVerbose() ? $output : 'Cannot run command.'
+            );
         }
 
         return $this;
