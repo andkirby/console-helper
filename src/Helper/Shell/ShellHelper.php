@@ -128,7 +128,7 @@ class ShellHelper extends Helper
      */
     protected function showCommand($command)
     {
-        if ($this->output && $this->output->getVerbosity()) {
+        if ($this->isVerbose()) {
             $this->output->writeln("command: $command");
         }
 
