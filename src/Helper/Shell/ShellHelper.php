@@ -34,6 +34,13 @@ class ShellHelper extends Helper
     protected $output;
 
     /**
+     * Verbosity level
+     *
+     * @var int
+     */
+    protected $verbosity = OutputInterface::VERBOSITY_NORMAL;
+
+    /**
      * {@inheritdoc}
      */
     public function getName()
@@ -96,6 +103,34 @@ class ShellHelper extends Helper
         $this->output = $output;
 
         return $this;
+    }
+
+    /**
+     * Get verbosity level
+     *
+     * @return int
+     */
+    public function getVerbosity()
+    {
+        if ($this->output) {
+            return $this->output->getVerbosity();
+        } else {
+            return $this->verbosity;
+        }
+    }
+
+    /**
+     * Get verbosity level
+     *
+     * @return int
+     */
+    public function setVerbosity()
+    {
+        if ($this->output) {
+            return $this->output->getVerbosity();
+        } else {
+            return $this->verbosity;
+        }
     }
 
     /**
@@ -162,9 +197,7 @@ class ShellHelper extends Helper
     {
         if ($exceptionOnError && $this->hadError()) {
             $exceptionClass = $exceptionClass ?: ShellException::class;
-            throw new $exceptionClass(
-                $output && $this->isVeryVerbose() ? $output : 'Cannot run command.'
-            );
+            throw new $exceptionClass($output);
         }
 
         return $this;
@@ -177,7 +210,7 @@ class ShellHelper extends Helper
      */
     protected function isVerbose()
     {
-        return $this->output && $this->output->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE;
+        return $this->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE;
     }
 
     /**
@@ -187,6 +220,6 @@ class ShellHelper extends Helper
      */
     protected function isVeryVerbose()
     {
-        return $this->output && $this->output->getVerbosity() >= OutputInterface::VERBOSITY_VERY_VERBOSE;
+        return $this->getVerbosity() >= OutputInterface::VERBOSITY_VERY_VERBOSE;
     }
 }
