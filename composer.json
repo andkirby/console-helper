@@ -1,5 +1,5 @@
 {
-  "name": "andkirby/console-helper",
+  "name": "rikby/console-helper",
   "license": "GPL-3.0",
   "description": "Symfony console helpers.",
   "require": {
