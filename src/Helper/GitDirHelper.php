@@ -60,13 +60,30 @@ class GitDirHelper extends Helper
     /**
      * Get VCS directory (GIT)
      *
+     * @param string|null $path
      * @return string
      */
-    public function getVcsDirectory()
+    public function getVcsDirectory($path = null)
     {
         //TODO Move to adapter
+        $path = $path ?: getcwd();
         // @codingStandardsIgnoreStart
-        return realpath(trim(`git rev-parse --show-toplevel 2>&1`));
+        return realpath(trim(`git -C $path rev-parse --show-toplevel 2>&1`));
+        // @codingStandardsIgnoreEnd
+    }
+
+    /**
+     * Get GIT directory (.git)
+     *
+     * @param string|null $path
+     * @return string
+     */
+    public function getDotGitDirectory($path = null)
+    {
+        //TODO Move to adapter
+        $path = $path ?: getcwd();
+        // @codingStandardsIgnoreStart
+        return realpath(trim(`git -C $path rev-parse --git-dir 2>&1`));
         // @codingStandardsIgnoreEnd
     }
 
@@ -118,11 +135,12 @@ class GitDirHelper extends Helper
      */
     protected function getValidator()
     {
+        $helper = $this;
         // @codingStandardsIgnoreStart
-        return function ($dir) {
+        return function ($dir) use ($helper) {
             $dir = rtrim($dir, '\\/');
-            if (!is_dir($dir.'/.git')) {
-                throw new LogicException("Directory '$dir' does not contain '.git' subdirectory.");
+            if (!is_dir($helper->getDotGitDirectory($dir))) {
+                throw new LogicException('No information about git directory.');
             }
 
             return $dir;
