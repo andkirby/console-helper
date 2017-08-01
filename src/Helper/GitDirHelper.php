@@ -67,6 +67,7 @@ class GitDirHelper extends Helper
     {
         //TODO Move to adapter
         $path = $path ?: getcwd();
+
         // @codingStandardsIgnoreStart
         return realpath(trim(`git -C $path rev-parse --show-toplevel 2>&1`));
         // @codingStandardsIgnoreEnd
@@ -82,9 +83,22 @@ class GitDirHelper extends Helper
     {
         //TODO Move to adapter
         $path = $path ?: getcwd();
+
         // @codingStandardsIgnoreStart
         return realpath(trim(`git -C $path rev-parse --git-dir 2>&1`));
         // @codingStandardsIgnoreEnd
+    }
+
+    /**
+     * Get hooks directory
+     *
+     * @param string|null $path
+     * @return string
+     */
+    public function getHooksDirectory($path = null)
+    {
+        return $this->getDotGitDirectory($path)
+            .DIRECTORY_SEPARATOR.'hooks';
     }
 
     /**
@@ -123,7 +137,7 @@ class GitDirHelper extends Helper
         );
 
         $style = $style ?: new SymfonyStyle($input, $output);
-        $dir = $style->askQuestion($question);
+        $dir   = $style->askQuestion($question);
 
         return rtrim($dir, '\\/');
     }
@@ -136,6 +150,7 @@ class GitDirHelper extends Helper
     protected function getValidator()
     {
         $helper = $this;
+
         // @codingStandardsIgnoreStart
         return function ($dir) use ($helper) {
             $dir = rtrim($dir, '\\/');
